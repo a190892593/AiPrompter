@@ -106,6 +106,9 @@ class Session:
         self._injecting: set[str] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._broadcast: Broadcast | None = None
+        # 切设备必须串行：两路开关/脚本同时点，会各自起一套采集线程，
+        # 泄漏的线程继续往同一个队列推帧，队列就会持续满（表现为每 3 秒丢 100 帧）。
+        self._switch_lock = asyncio.Lock()
         # 面试记录（一场面试一条）：status / started_at / ended_at / 岗位 / 简历
         self.meta: dict = {}
 
@@ -301,6 +304,10 @@ class Session:
 
     async def switch_devices(self, output_device: str = "", input_device: str = "") -> dict:
         """面试进行中切换扬声器环回/麦克风：只重启采集线程，会话和 ASR 不重开。"""
+        async with self._switch_lock:
+            return await self._switch_devices_locked(output_device, input_device)
+
+    async def _switch_devices_locked(self, output_device: str, input_device: str) -> dict:
         if not self.active:
             raise RuntimeError("面试没在运行，不能切换设备")
         loopback = await asyncio.to_thread(
