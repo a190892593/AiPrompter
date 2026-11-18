@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager
 import time
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from typing import Awaitable, Callable
 
 from . import asr, llmlog, store
@@ -29,6 +30,56 @@ from .schemas import SessionConfig
 log = logging.getLogger("state")
 
 Broadcast = Callable[[dict], Awaitable[None]]
+
+# ---- 定稿去重 ----
+# 火山流式识别按它自己的句子边界回传累积文本，本地却按 VAD 静音切句。
+# 两边不同步时，同一句话会被本地定稿一次、云端再重发一次，界面上就是"双份对话"。
+_PUNCT_CHARS = set("，。！？、,.!?；;：:…—～~ \t\r\n　\"'“”‘’（）()【】[]")
+REPEAT_SIMILARITY = 0.9
+
+
+def _norm_text(text: str) -> str:
+    """去掉标点、空白和引号，只留内容用于比较。"""
+    return "".join(ch for ch in (text or "") if ch not in _PUNCT_CHARS)
+
+
+def _common_prefix_len(a: str, b: str) -> int:
+    n = min(len(a), len(b))
+    i = 0
+    while i < n and a[i] == b[i]:
+        i += 1
+    return i
+
+
+def classify_repeat(prev: str, text: str, gap: float, window: float) -> str:
+    """判断新定稿和同通道上一条转写的关系。
+
+    返回：
+      keep    —— 新文本是上一条的重复或截断，直接丢弃
+      replace —— 新文本覆盖并延长了上一条，原地替换，不新增气泡
+      new     —— 与上一条无关，正常新增
+    """
+    if window <= 0 or gap > window:
+        return "new"
+    a, b = _norm_text(prev), _norm_text(text)
+    if not a or not b:
+        return "new"
+    if a == b:
+        return "keep"
+    # 只有"明显更长"才算新增内容（多出 4 个字以上），否则视为同一句被重发
+    longer = len(b) >= len(a) + 4
+    # 一边完整包含另一边：保留更长的那份
+    if b.startswith(a) or b.endswith(a):
+        return "replace" if longer else "keep"
+    if a.startswith(b) or a.endswith(b):
+        return "keep"
+    # 断句不同但内容几乎一样（"你没有" vs "你们没有"），或者同一段被重新识别
+    short = min(len(a), len(b))
+    if short >= 6 and _common_prefix_len(a, b) >= int(short * 0.8):
+        return "replace" if longer else "keep"
+    if SequenceMatcher(None, a, b).ratio() >= REPEAT_SIMILARITY:
+        return "replace" if longer else "keep"
+    return "new"
 
 
 class Session:
@@ -390,7 +441,31 @@ class Session:
             return
         # 术语纠正交给意图识别模型（它会把误识别术语改对并回写这条转写），
         # 这里不再维护本地别名表
-        log.info("转写定稿[%s]: %r", "面试官" if channel == "interviewer" else "候选人", text[:120])
+        speaker = "面试官" if channel == "interviewer" else "候选人"
+
+        # 云端把同一句重新发一遍时不要新增气泡（否则界面上就是"双份对话"）
+        last = self.utterances[-1] if self.utterances else None
+        if last is not None and last.get("channel") == channel:
+            gap = time.time() - float(last.get("ts") or 0)
+            action = classify_repeat(
+                str(last.get("text") or ""), text, gap, settings.transcript_dedup_seconds
+            )
+            if action == "keep":
+                log.info("跳过重复定稿[%s]: %r", speaker, text[:120])
+                return
+            if action == "replace":
+                last["text"] = text
+                last["ts"] = time.time()
+                self._dirty = True
+                log.info("定稿覆盖[%s]: %r", speaker, text[:120])
+                await self._broadcast(
+                    {"type": "final_update", "channel": channel, "text": text, "ts": time.time()}
+                )
+                if self.pipeline is not None:
+                    await self.pipeline.feed_final(channel, text)
+                return
+
+        log.info("转写定稿[%s]: %r", speaker, text[:120])
 
         # 同一段话没说完被 VAD 切成两段：并回上一条气泡，而不是新增一块
         merged = self._merge_into_last(channel, text)
@@ -405,7 +480,6 @@ class Session:
             return
 
         self.record_final(channel, text)
-        utterance_id = self.utterances[-1]["id"] if self.utterances else ""
         await self._broadcast({"type": "final", "channel": channel, "text": text, "ts": time.time()})
         if self.pipeline is not None:
             await self.pipeline.feed_final(channel, text)

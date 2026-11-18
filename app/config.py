@@ -28,6 +28,8 @@ class Settings:
     vad_silence_ms: int = int(os.getenv("VAD_SILENCE_MS", "900"))
     # 同一段话被 VAD/端点切碎后，多少秒内的下一段继续拼回同一条转写（0=不合并）
     transcript_merge_gap: float = float(os.getenv("TRANSCRIPT_MERGE_GAP", "15"))
+    # 定稿去重：同通道多少秒内高度重合的定稿不再新增气泡（0=关闭去重）
+    transcript_dedup_seconds: float = float(os.getenv("TRANSCRIPT_DEDUP_SECONDS", "30"))
     # 缓冲多久的音频，满了丢最旧
     buffer_seconds: float = float(os.getenv("BUFFER_SECONDS", "2.0"))
 
