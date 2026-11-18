@@ -1,0 +1,35 @@
+# 依赖与产物
+.deps/
+.venv/
+models/
+frontend/node_modules/
+.pnpm-store/
+.tmp/
+.dsh-acl-reports/
+*.log
+
+# 运行缓存（本地生成，不要提交）
+jieba.cache
+*.cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 配置与数据
+.env
+.env.local
+.env.*.local
+app/.env
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# 系统与编辑器
+Thumbs.db
+.DS_Store
+*.swp
+.idea/
+.vscode/

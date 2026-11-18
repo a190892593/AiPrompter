@@ -1,0 +1,479 @@
+/* ============================================================
+   公共主题层：日夜两套语义变量 + 组件映射
+   在 styles.css 之后加载，所有页面共用同一套 token。
+   ============================================================ */
+
+/* ---------- 语义变量：夜间（默认） ---------- */
+:root {
+  --t-bg: #08060f;
+  --t-glow-1: rgba(124, 58, 237, 0.3);
+  --t-glow-2: rgba(56, 189, 248, 0.16);
+
+  --t-surface: rgba(24, 20, 40, 0.72);
+  --t-surface-2: rgba(32, 26, 54, 0.94);
+  --t-surface-soft: rgba(255, 255, 255, 0.04);
+  --t-surface-hover: rgba(255, 255, 255, 0.07);
+
+  --t-line: rgba(255, 255, 255, 0.1);
+  --t-line-strong: rgba(255, 255, 255, 0.18);
+
+  --t-text: #ece8f8;
+  --t-text-soft: #c8d4ee;
+  --t-muted: #9b93b8;
+
+  --t-accent: #8b5cf6;
+  --t-accent-2: #22d3ee;
+
+  --t-in-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(37, 99, 235, 0.1));
+  --t-in-border: rgba(56, 189, 248, 0.34);
+  --t-in-text: #dbeafe;
+  --t-in-label: #8fd0ff;
+
+  --t-cand-bg: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.12));
+  --t-cand-border: rgba(168, 85, 247, 0.36);
+  --t-cand-text: #f6e9ff;
+  --t-cand-label: #d8b4fe;
+
+  --t-answer-bg: rgba(255, 255, 255, 0.025);
+  --t-answer-strong-bg: rgba(91, 140, 255, 0.07);
+
+  --t-rail-bg: rgba(26, 21, 44, 0.86);
+  --t-code-bg: rgba(0, 0, 0, 0.25);
+
+  --t-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- 语义变量：白天 ---------- */
+:root[data-theme="light"] {
+  --t-bg: #f3f1fb;
+  --t-glow-1: rgba(139, 92, 246, 0.18);
+  --t-glow-2: rgba(34, 211, 238, 0.14);
+
+  --t-surface: #ffffff;
+  --t-surface-2: #ffffff;
+  --t-surface-soft: rgba(28, 22, 60, 0.035);
+  --t-surface-hover: rgba(28, 22, 60, 0.07);
+
+  --t-line: rgba(28, 22, 60, 0.14);
+  --t-line-strong: rgba(28, 22, 60, 0.24);
+
+  --t-text: #1c1730;
+  --t-text-soft: #2b2547;
+  --t-muted: #625b80;
+
+  --t-accent: #7c3aed;
+  --t-accent-2: #0891b2;
+
+  --t-in-bg: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(37, 99, 235, 0.07));
+  --t-in-border: rgba(37, 99, 235, 0.28);
+  --t-in-text: #0f3a63;
+  --t-in-label: #1d6fb8;
+
+  --t-cand-bg: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(236, 72, 153, 0.08));
+  --t-cand-border: rgba(168, 85, 247, 0.28);
+  --t-cand-text: #4a1668;
+  --t-cand-label: #7b2fbf;
+
+  --t-answer-bg: #ffffff;
+  --t-answer-strong-bg: rgba(91, 140, 255, 0.08);
+
+  --t-rail-bg: rgba(255, 255, 255, 0.94);
+  --t-code-bg: rgba(28, 22, 60, 0.05);
+
+  --t-shadow: 0 8px 24px rgba(60, 40, 120, 0.12);
+}
+
+/* ---------- 基础 ---------- */
+:root body {
+  background:
+    radial-gradient(1100px 720px at 12% -12%, var(--t-glow-1), transparent 62%),
+    radial-gradient(900px 620px at 92% 6%, var(--t-glow-2), transparent 58%),
+    var(--t-bg) !important;
+  color: var(--t-text);
+}
+
+:root .topbar {
+  background: var(--t-surface);
+  border-bottom-color: var(--t-line);
+}
+
+:root .crumb,
+:root .status-pill {
+  color: var(--t-muted);
+}
+
+:root .status-pill {
+  border-color: var(--t-line);
+  background: var(--t-surface);
+}
+
+:root .rail {
+  background: var(--t-rail-bg);
+  border-right-color: var(--t-line);
+}
+
+:root .rail-item {
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+  color: var(--t-text);
+}
+
+:root .rail-item:hover {
+  background: var(--t-surface-hover);
+}
+
+:root .rail-item.on {
+  color: var(--t-text);
+  border-color: rgba(139, 92, 246, 0.55);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.24), rgba(34, 211, 238, 0.12));
+}
+
+/* ---------- 面板 ---------- */
+:root .panel,
+:root .prompt-card,
+:root .answer-card,
+:root .report-card,
+:root .setup-card,
+:root .detail-pane,
+:root .detail-report,
+:root .interview-ended {
+  background: var(--t-surface);
+  border-color: var(--t-line);
+  color: var(--t-text);
+}
+
+:root .panel-head,
+:root .panel-foot,
+:root .control-bar,
+:root .ask-bar,
+:root .composer,
+:root .judge-strip,
+:root .test-strip {
+  background: var(--t-surface-soft);
+  border-color: var(--t-line);
+  color: var(--t-text);
+}
+
+:root .panel-head h3,
+:root .panel-meta {
+  color: var(--t-text-soft);
+}
+
+/* ---------- 对话气泡 ---------- */
+:root .bubble-row.interviewer .bubble {
+  background: var(--t-in-bg);
+  border-color: var(--t-in-border);
+}
+
+:root .bubble-row.candidate .bubble {
+  background: var(--t-cand-bg);
+  border-color: var(--t-cand-border);
+}
+
+:root .bubble-row.interviewer .bubble p {
+  color: var(--t-in-text);
+}
+
+:root .bubble-row.candidate .bubble p {
+  color: var(--t-cand-text);
+}
+
+:root .bubble-row.interviewer .bubble-who {
+  color: var(--t-in-label);
+}
+
+:root .bubble-row.candidate .bubble-who {
+  color: var(--t-cand-label);
+}
+
+:root .bubble-time {
+  color: var(--t-muted);
+}
+
+:root .bubble-actions .link-btn {
+  color: var(--t-accent-2);
+}
+
+/* ---------- 提词器卡片 ---------- */
+:root .answer-head .badge,
+:root .answer-head .chip-inline,
+:root .judge-kind,
+:root .judge-conf {
+  color: var(--t-muted);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .answer-head .badge-hot {
+  color: #ffd88a;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+:root .badge-time {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+:root .answer-question,
+:root .answer-title-left .answer-question {
+  color: var(--t-text);
+}
+
+:root .answer-time,
+:root .answer-raw {
+  color: var(--t-muted);
+}
+
+:root .answer-col {
+  background: var(--t-answer-bg);
+  border-color: var(--t-line);
+}
+
+:root .answer-col.standard {
+  background: var(--t-answer-strong-bg);
+  border-color: rgba(91, 140, 255, 0.45);
+}
+
+:root .answer-col-body {
+  color: var(--t-text);
+}
+
+:root .answer-col-head {
+  border-bottom-color: var(--t-line);
+}
+
+:root .col-tag {
+  color: var(--t-muted);
+  border-color: var(--t-line);
+}
+
+:root .col-tag.brief {
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.45);
+}
+
+:root .col-tag.standard {
+  color: #2b4f9e;
+  border-color: rgba(43, 79, 158, 0.45);
+}
+
+:root .col-tag.deep {
+  color: #7b2fbf;
+  border-color: rgba(123, 47, 191, 0.45);
+}
+
+:root[data-theme="dark"] .col-tag.brief {
+  color: #8ff0c8;
+}
+:root[data-theme="dark"] .col-tag.standard {
+  color: #a9c6ff;
+}
+:root[data-theme="dark"] .col-tag.deep {
+  color: #d8b4fe;
+}
+
+:root .reasoning {
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .reasoning summary,
+:root .reasoning pre,
+:root .card-calls,
+:root .footnote,
+:root .muted {
+  color: var(--t-muted);
+}
+
+:root .source-chip {
+  color: var(--t-accent-2);
+  border-color: color-mix(in srgb, var(--t-accent-2) 45%, transparent);
+  background: var(--t-surface-soft);
+}
+
+/* ---------- 输入与按钮 ---------- */
+:root .composer {
+  border-color: var(--t-line-strong);
+  background: var(--t-surface);
+}
+
+:root .composer textarea {
+  color: var(--t-text);
+}
+
+:root .composer textarea::placeholder,
+:root input::placeholder,
+:root textarea::placeholder {
+  color: var(--t-muted);
+}
+
+:root input,
+:root select,
+:root textarea {
+  color: var(--t-text);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .composer-hint,
+:root .control-hint {
+  color: var(--t-muted);
+}
+
+:root .btn.ghost,
+:root .btn {
+  color: var(--t-text);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .btn.primary {
+  color: #fff;
+}
+
+:root .switch {
+  color: var(--t-muted);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .switch.on {
+  color: var(--t-text);
+  border-color: rgba(91, 140, 255, 0.5);
+  background: rgba(91, 140, 255, 0.14);
+}
+
+:root .mode-chip {
+  color: var(--t-muted);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .mode-chip.on {
+  color: var(--t-accent);
+  border-color: color-mix(in srgb, var(--t-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--t-accent) 14%, transparent);
+}
+
+/* ---------- 提示 / 横幅 / 列表 ---------- */
+:root .alert {
+  color: #ffb3b3;
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+:root .prompt-toast,
+:root .notice {
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.35);
+  background: rgba(22, 163, 74, 0.1);
+}
+
+:root .resume-bar,
+:root .interview-running {
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+:root .interview-timer-label {
+  color: var(--t-text);
+}
+
+:root .interview-timer-value {
+  color: var(--t-accent-2);
+}
+
+:root .log-row,
+:root .interview-row {
+  color: var(--t-text-soft);
+  border-color: var(--t-line);
+  background: var(--t-surface-soft);
+}
+
+:root .log-time,
+:root .log-latency,
+:root .log-tokens,
+:root .interview-meta,
+:root .status-pill-small {
+  color: var(--t-muted);
+}
+
+:root .log-pre,
+:root .call-pre {
+  color: var(--t-text-soft);
+  background: var(--t-code-bg);
+  border-color: var(--t-line);
+}
+
+:root .report-card,
+:root .start-modal {
+  color: var(--t-text);
+}
+
+:root .report-verdict,
+:root .report-score-label,
+:root .dimension,
+:root .per-item {
+  color: var(--t-muted);
+}
+
+:root .dimension b,
+:root .per-item b,
+:root .report-score-value {
+  color: var(--t-text);
+}
+
+:root[data-theme="light"] .report-score-value {
+  color: #2b4f9e;
+}
+
+:root .empty-state,
+:root .empty {
+  color: var(--t-muted);
+}
+
+/* 白天模式下高亮徽章要压深，避免浅黄看不清 */
+:root[data-theme="light"] .answer-head .badge-hot {
+  color: #b45309;
+  border-color: rgba(180, 83, 9, 0.45);
+  background: rgba(245, 158, 11, 0.16);
+}
+
+:root[data-theme="light"] .answer-head .badge-live {
+  color: #6d28d9;
+  border-color: rgba(109, 40, 217, 0.4);
+  background: rgba(109, 40, 217, 0.12);
+}
+
+:root[data-theme="light"] .pick-strong {
+  color: #2b4f9e;
+  border-color: rgba(43, 79, 158, 0.4);
+  background: rgba(91, 140, 255, 0.1);
+}
+
+:root[data-theme="light"] .pick-strong:has(input:checked) {
+  color: #15803d;
+  border-color: rgba(21, 128, 61, 0.5);
+  background: rgba(34, 197, 94, 0.14);
+}
+
+:root[data-theme="light"] .live-dot,
+:root[data-theme="light"] .judge-dot.live {
+  background: #f59e0b;
+}
+
+/* 白天模式链接按钮用深靛色，避免灰白看不清 */
+:root[data-theme="light"] .link-btn {
+  color: #4f46e5;
+}
+
+:root[data-theme="light"] .answer-col-head .link-btn {
+  color: #4f46e5;
+}
+
+:root[data-theme="light"] .col-tag {
+  font-weight: 500;
+}

@@ -1,0 +1,16 @@
+# 统一换行符：仓库内一律 LF，Windows 检出时按 core.autocrlf 转 CRLF
+* text=auto
+
+# 二进制文件，不做换行转换与 diff
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.onnx binary
+*.db binary
+*.wav binary
+*.mp3 binary
+*.exe binary
+*.dll binary
