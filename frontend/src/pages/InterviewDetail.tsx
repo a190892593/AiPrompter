@@ -59,12 +59,22 @@ interface Report {
 interface Detail {
   id: string;
   position_name?: string;
+  position_id?: number | null;
   status?: string;
   started_at?: number;
   ended_at?: number | null;
   elapsed?: number;
   end_reason?: string;
-  config?: { role?: string; level?: string };
+  config?: {
+    role?: string;
+    level?: string;
+    engine?: string;
+    answer_level?: string;
+    output_device?: string;
+    input_device?: string;
+    background?: string;
+    resume?: string;
+  };
   resume?: string;
   utterances?: Utterance[];
   questions?: Card[];
@@ -80,7 +90,7 @@ const STATUS_LABEL: Record<string, string> = {
   running: "进行中",
   finished: "已结束",
   auto_interrupted: "系统自动中断",
-  interrupted: "已中断",
+  interrupted: "已中断（可继续）",
 };
 
 function formatDateTime(seconds: number): string {
@@ -109,10 +119,20 @@ function fmtDateTime(seconds?: number | null): string {
   });
 }
 
-export default function InterviewDetail({ id, onBack }: { id: string; onBack: () => void }) {
+export default function InterviewDetail({
+  id,
+  onBack,
+  onOpen,
+}: {
+  id: string;
+  onBack: () => void;
+  onOpen: (id: string) => void;
+}) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState<"" | "resume" | "restart">("");
 
   const load = useCallback(async () => {
     setError("");
@@ -138,6 +158,63 @@ export default function InterviewDetail({ id, onBack }: { id: string; onBack: ()
     return () => window.removeEventListener("keydown", onKey);
   }, [reportOpen]);
 
+  // 继续这场面试：恢复采集、对话流与提词器（已中断/进行中的都支持）
+  const resumeInterview = useCallback(async () => {
+    setNotice("");
+    setBusy("resume");
+    try {
+      const resp = await fetch(`/api/interviews/${id}/resume`, { method: "POST" });
+      const data = (await resp.json().catch(() => ({}))) as { detail?: string; ok?: boolean };
+      if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+      onOpen(id);
+    } catch (err) {
+      setNotice(`继续失败：${(err as Error).message}`);
+    } finally {
+      setBusy("");
+    }
+  }, [id, onOpen]);
+
+  // 重新开始：沿用同一岗位/简历新建一场，计时从 0 开始
+  const restartInterview = useCallback(async () => {
+    if (!detail) return;
+    setNotice("");
+    setBusy("restart");
+    try {
+      const cfg = detail.config ?? {};
+      const resp = await fetch("/api/interviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: detail.position_name || cfg.role || "面试练习",
+          resume: detail.resume || "",
+          position_id: detail.position_id ?? null,
+          position_name: detail.position_name ?? "",
+          level: cfg.level ?? "mid",
+          engine: cfg.engine ?? "auto",
+          answer_level: cfg.answer_level ?? "standard",
+          output_device: cfg.output_device ?? "",
+          input_device: cfg.input_device ?? "",
+          mode: "real",
+          background: cfg.background ?? "",
+        }),
+      });
+      const data = (await resp.json().catch(() => ({}))) as {
+        id?: string;
+        session_id?: string;
+        interview?: { id?: string };
+        detail?: string;
+      };
+      if (!resp.ok) throw new Error(data.detail || `HTTP ${resp.status}`);
+      const createdId = data.interview?.id ?? data.id ?? data.session_id;
+      if (!createdId) throw new Error("服务端没有返回新的面试 ID");
+      onOpen(createdId);
+    } catch (err) {
+      setNotice(`重新开始失败：${(err as Error).message}`);
+    } finally {
+      setBusy("");
+    }
+  }, [detail, onOpen]);
+
   if (error) {
     return (
       <div className="prompt-page">
@@ -157,6 +234,8 @@ export default function InterviewDetail({ id, onBack }: { id: string; onBack: ()
   const endTs = detail.ended_at ?? (startTs ? Math.floor(Date.now() / 1000) : 0);
   const duration = detail.elapsed ?? (startTs && endTs ? endTs - startTs : 0);
   const report = detail.report ?? null;
+  const resumable = detail.status === "running" || detail.status === "interrupted";
+  const canRestart = Boolean((detail.resume ?? detail.config?.resume ?? "").trim());
 
   return (
     <div className="prompt-page detail-page">
@@ -198,6 +277,24 @@ export default function InterviewDetail({ id, onBack }: { id: string; onBack: ()
           <button className="btn ghost" onClick={onBack}>
             ← 返回面试列表
           </button>
+          {resumable && (
+            <button
+              className="btn primary"
+              disabled={busy !== ""}
+              onClick={() => void resumeInterview()}
+              title="恢复采集和提词，接着上一场继续"
+            >
+              {busy === "resume" ? "正在恢复…" : "▶ 继续这场面试"}
+            </button>
+          )}
+          <button
+            className="btn"
+            disabled={busy !== "" || !canRestart}
+            onClick={() => void restartInterview()}
+            title="用同样的岗位和简历新建一场，从 0 开始计时"
+          >
+            {busy === "restart" ? "正在开始…" : "🔄 重新开始"}
+          </button>
           {report && (
             <button className="btn primary" onClick={() => setReportOpen(true)}>
               📊 评分报告
@@ -205,6 +302,8 @@ export default function InterviewDetail({ id, onBack }: { id: string; onBack: ()
           )}
         </div>
       </header>
+
+      {notice && <div className="alert">{notice}</div>}
 
       <div className="detail-grid">
         <section className="detail-pane">

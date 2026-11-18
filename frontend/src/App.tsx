@@ -113,7 +113,13 @@ export default function App() {
       return <Teleprompter bridge={bridge} interviewId={route.id} onEnded={exitInterview} />;
     }
     if (route.name === "detail") {
-      return <InterviewDetail id={route.id} onBack={exitInterview} />;
+      return (
+        <InterviewDetail
+          id={route.id}
+          onBack={exitInterview}
+          onOpen={(id) => navigate(interviewPath(id))}
+        />
+      );
     }
     if (route.name === "page") {
       switch (route.page) {
