@@ -451,6 +451,12 @@ class Session:
         # 这里不再维护本地别名表
         speaker = "面试官" if channel == "interviewer" else "候选人"
 
+        # 扬声器外放时，面试官的声音会被麦克风收进去，候选人通道会把同一句再转一遍。
+        # 这种回声只污染上下文，判掉即可。
+        if self._is_echo(channel, text):
+            log.warning("跳过回声[%s]: %r", speaker, text[:120])
+            return
+
         # 云端把同一句重新发一遍时不要新增气泡（否则界面上就是"双份对话"）。
         # 注意要回看同通道最近一条：中间插了对方的话也要能认出来。
         last = self._last_of(channel)
@@ -507,6 +513,39 @@ class Session:
             await self.pipeline.feed_final(channel, text)
 
     _SENTENCE_END = tuple("。！？!?…；;.\n")
+
+    def _is_echo(self, channel: str, text: str) -> bool:
+        """候选人通道收到的内容，是不是刚播出来的面试官声音（扬声器回声）。
+
+        判定：最近 `transcript_echo_seconds` 秒内面试官说过高度重合的话，
+        且两段文本长度相近（避免把「您问的是 X」这种复述误判成回声）。
+        """
+        window = settings.transcript_echo_seconds
+        if channel != "candidate" or window <= 0:
+            return False
+        b = _norm_text(text)
+        if len(b) < 6:
+            return False
+        now = time.time()
+        for item in reversed(self.utterances):
+            if item.get("channel") != "interviewer":
+                continue
+            gap = now - float(item.get("ts") or 0)
+            if gap > window:
+                break
+            a = _norm_text(str(item.get("text") or ""))
+            if len(a) < 6:
+                continue
+            short, long_ = sorted((len(a), len(b)))
+            if short / long_ < 0.5:
+                continue
+            # 一边完整包含另一边，且长度几乎一样：同一句被回声重发
+            diff = long_ - short
+            if (a in b or b in a) and diff <= max(3, int(short * 0.2)):
+                return True
+            if SequenceMatcher(None, a, b).ratio() >= settings.transcript_echo_similarity:
+                return True
+        return False
 
     def _last_of(self, channel: str) -> dict | None:
         """同通道最近一条转写（中间可能插过对方的话）。"""

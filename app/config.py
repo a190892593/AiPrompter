@@ -30,6 +30,10 @@ class Settings:
     transcript_merge_gap: float = float(os.getenv("TRANSCRIPT_MERGE_GAP", "15"))
     # 定稿去重：同通道多少秒内高度重合的定稿不再新增气泡（0=关闭去重）
     transcript_dedup_seconds: float = float(os.getenv("TRANSCRIPT_DEDUP_SECONDS", "30"))
+    # 回声抑制：候选人通道在多少秒内听到和面试官同样的话，就判定为扬声器回声（0=关闭）
+    transcript_echo_seconds: float = float(os.getenv("TRANSCRIPT_ECHO_SECONDS", "30"))
+    # 回声判定的相似度门槛（0~1，越大越保守）
+    transcript_echo_similarity: float = float(os.getenv("TRANSCRIPT_ECHO_SIMILARITY", "0.8"))
     # 缓冲多久的音频，满了丢最旧
     buffer_seconds: float = float(os.getenv("BUFFER_SECONDS", "2.0"))
 
