@@ -99,6 +99,8 @@ class Session:
         self.session_id = ""
         self.created_at = ""
         self.utterances: list[dict] = []
+        # 每个通道最后一次定稿的文本：ASR 线程晚到的重复结果不再当作"实时识别"上屏
+        self._last_final: dict[str, str] = {}
         self._dirty = False
         self._save_task: asyncio.Task | None = None
         self._injecting: set[str] = set()
@@ -143,6 +145,7 @@ class Session:
         self.session_id = uuid.uuid4().hex[:12]
         self.created_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
         self.utterances = []
+        self._last_final = {}
         self.started_at = time.time()
         self.meta = {
             "status": "running",
@@ -233,6 +236,11 @@ class Session:
 
         # 沿用原会话的历史转写与卡片，后续保存直接写回同一条记录
         self.utterances = list(doc.get("utterances") or [])
+        # 续场时记住各通道最后一句，避免 ASR 回放历史文本又冒出"实时"气泡
+        for item in reversed(self.utterances):
+            channel = str(item.get("channel") or "")
+            if channel and channel not in self._last_final:
+                self._last_final[channel] = str(item.get("text") or "")
         questions = list(doc.get("questions") or [])
         if self.pipeline is not None:
             self.pipeline.qa = questions
@@ -443,19 +451,31 @@ class Session:
         # 这里不再维护本地别名表
         speaker = "面试官" if channel == "interviewer" else "候选人"
 
-        # 云端把同一句重新发一遍时不要新增气泡（否则界面上就是"双份对话"）
-        last = self.utterances[-1] if self.utterances else None
-        if last is not None and last.get("channel") == channel:
+        # 云端把同一句重新发一遍时不要新增气泡（否则界面上就是"双份对话"）。
+        # 注意要回看同通道最近一条：中间插了对方的话也要能认出来。
+        last = self._last_of(channel)
+        if last is not None:
             gap = time.time() - float(last.get("ts") or 0)
             action = classify_repeat(
                 str(last.get("text") or ""), text, gap, settings.transcript_dedup_seconds
             )
             if action == "keep":
                 log.info("跳过重复定稿[%s]: %r", speaker, text[:120])
+                self._last_final[channel] = str(last.get("text") or text)
+                # 顺手广播一次 final_update：把可能残留的"实时"气泡刷回已定稿内容
+                await self._broadcast(
+                    {
+                        "type": "final_update",
+                        "channel": channel,
+                        "text": self._last_final[channel],
+                        "ts": time.time(),
+                    }
+                )
                 return
             if action == "replace":
                 last["text"] = text
                 last["ts"] = time.time()
+                self._last_final[channel] = text
                 self._dirty = True
                 log.info("定稿覆盖[%s]: %r", speaker, text[:120])
                 await self._broadcast(
@@ -471,6 +491,7 @@ class Session:
         merged = self._merge_into_last(channel, text)
         if merged is not None:
             log.info("转写合并[%s]: %r", channel, merged[-120:])
+            self._last_final[channel] = merged
             self._dirty = True
             await self._broadcast(
                 {"type": "final_update", "channel": channel, "text": merged, "ts": time.time()}
@@ -480,11 +501,19 @@ class Session:
             return
 
         self.record_final(channel, text)
+        self._last_final[channel] = text
         await self._broadcast({"type": "final", "channel": channel, "text": text, "ts": time.time()})
         if self.pipeline is not None:
             await self.pipeline.feed_final(channel, text)
 
     _SENTENCE_END = tuple("。！？!?…；;.\n")
+
+    def _last_of(self, channel: str) -> dict | None:
+        """同通道最近一条转写（中间可能插过对方的话）。"""
+        for item in reversed(self.utterances):
+            if item.get("channel") == channel:
+                return item
+        return None
 
     def _merge_into_last(self, channel: str, text: str) -> str | None:
         """把这段转写并到上一句同通道转写上；不合适合并就返回 None。
@@ -707,7 +736,15 @@ class Session:
             text = (text or "").strip()
             if text != current:
                 current = text
-                if text:
+                # 已定稿的这一句又被 ASR 回放时不要再广播 partial：
+                # 否则界面会多出一个"实时"气泡，而后续重复定稿已被去重，永久清不掉。
+                repeated = (
+                    classify_repeat(
+                        self._last_final.get(channel, ""), text, 0.0, settings.transcript_dedup_seconds
+                    )
+                    != "new"
+                )
+                if text and not repeated:
                     await self._broadcast({"type": "partial", "channel": channel, "text": text})
                     # 投机意图识别：拿半截转写先预判，定稿时直接复用，省掉 1s 左右
                     if channel == "interviewer" and self.pipeline is not None:
