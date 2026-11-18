@@ -831,6 +831,10 @@ uv run python tools\check_judge_loop.py
 
 - **必须在面试所在的 Windows 机器上跑**：WASAPI 环回是 Windows-only
 - 环回设备要选会议软件实际使用的扬声器；蓝牙耳机休眠后需要重开
+- **换耳机 / 插拔 USB 声卡后要重启应用**：`app/audio/pa.py` 里 PyAudio 是进程级单例，
+  `refresh_audio()` 故意空转（Windows 上反复 init/terminate 会随机 access violation 把进程打崩），
+  所以设备列表在进程生命周期内只枚举一次；新插入设备的环回不会出现在下拉框里，重启后才看得到。
+  同理，开会前先接好耳机再启动应用最省事。
 - 本地识别（sherpa）不出标点，火山识别有标点
 - 题库召回剩余漏检需要 cross-encoder 重排才能解决
 - 历史面试会一直累积，暂未做自动清理
