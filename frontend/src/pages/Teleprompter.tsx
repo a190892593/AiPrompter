@@ -1262,14 +1262,10 @@ export default function Teleprompter({
             ))}
           </div>
 
-          <footer className="panel-foot">
-            <LevelMeter label="面试官" value={bridge.levels.interviewer} active={bridge.active} />
-            <LevelMeter label="候选人" value={bridge.levels.candidate} active={bridge.active} />
-          </footer>
-
       {(!interviewId || bridge.active) && (
       <div className="control-bar">
-        <div className="device-group">
+        <div className="io-row">
+          <LevelMeter label="面试官" value={bridge.levels.interviewer} active={bridge.active} />
           <label>
             扬声器环回
             <select
@@ -1297,7 +1293,8 @@ export default function Teleprompter({
           </button>
         </div>
 
-        <div className="device-group">
+        <div className="io-row">
+          <LevelMeter label="候选人" value={bridge.levels.candidate} active={bridge.active} />
           <label>
             麦克风
             <select

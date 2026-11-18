@@ -2637,6 +2637,28 @@ body{
   flex: none;
 }
 
+/* 电平表与设备选择编成一组：面试官 ↔ 扬声器环回，候选人 ↔ 麦克风 */
+.io-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.io-row .meter {
+  flex: 1 1 auto;
+  min-width: 90px;
+}
+
+.io-row > label {
+  flex: none;
+}
+
+.panel-foot-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .control-bar label {
   font-size: 11.5px;
   white-space: nowrap;
