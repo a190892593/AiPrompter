@@ -209,10 +209,17 @@ export function useBridge() {
     }
     if (type === "partial") {
       const channel = event.channel as "interviewer" | "candidate";
+      const value = String(event.text ?? "").trim();
       setUtterances((prev) => {
         const id = `live-${channel}`;
+        // ASR 线程晚到的结果会把已定稿的那句话再回放一遍。这时如果还建"实时"气泡，
+        // 后续重复定稿已被服务端去重、不会再发 final，这个气泡就永远清不掉了。
+        const lastFinal = [...prev].reverse().find((item) => item.channel === channel && item.final);
+        if (lastFinal && value && (lastFinal.text === value || lastFinal.text.startsWith(value))) {
+          return prev.filter((item) => item.id !== id);
+        }
         const rest = prev.filter((item) => item.id !== id);
-        return [...rest, { id, channel, text: String(event.text ?? ""), final: false, ts: Date.now() }];
+        return [...rest, { id, channel, text: value, final: false, ts: Date.now() }];
       });
       return;
     }
