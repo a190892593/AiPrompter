@@ -32,7 +32,7 @@ SCHEMA: list[tuple[str, str, str, str, bool]] = [
     ("vad_silence_ms", "int", "采集", "静音多久算说完（毫秒）", False),
     ("vad_threshold", "float", "采集", "能量门限（越大越不灵敏）", False),
     ("judge_confidence", "float", "意图识别", "置信度门槛（低于不出参考答案）", False),
-    ("intent_verify", "bool", "意图识别", "低置信度时二次校验（宁可不出卡，也不出错题）", False),
+    ("intent_verify", "bool", "意图识别", "低置信度时异步复核（先出卡，复核不过再撤卡）", False),
     ("intent_verify_below", "float", "意图识别", "低于该置信度触发二次校验", False),
     ("report_thinking", "bool", "评分", "评分报告是否启用思考（慢一些，点评更细）", False),
     ("answer_level", "str", "参考答案", "默认档位 brief / standard / deep", False),

@@ -24,7 +24,7 @@ class Settings:
     frame_ms: int = 30
     # 能量门限：低于它视为静音（安静房间底噪约 0.001-0.003）
     vad_threshold: float = float(os.getenv("VAD_THRESHOLD", "0.008"))
-    # 连续静音多久算一句话说完（默认 1.2s：句子中间的停顿不该把话切断）
+    # 连续静音多久算一句话说完（默认 900ms：句子中间的停顿不该把话切断）
     vad_silence_ms: int = int(os.getenv("VAD_SILENCE_MS", "900"))
     # 同一段话被 VAD/端点切碎后，多少秒内的下一段继续拼回同一条转写（0=不合并）
     transcript_merge_gap: float = float(os.getenv("TRANSCRIPT_MERGE_GAP", "15"))

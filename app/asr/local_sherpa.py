@@ -57,7 +57,7 @@ def resolve_model_dir() -> Path:
             if child.is_dir() and (child / "tokens.txt").is_file():
                 return child
     raise FileNotFoundError(
-        f"没有找到本地 ASR 模型。请运行 `python scripts/download_models.py`，"
+        f"没有找到本地 ASR 模型。请运行 `python tools/download_models.py`，"
         f"模型会下载到 {settings.models_dir}"
     )
 
