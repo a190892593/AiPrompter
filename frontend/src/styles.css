@@ -2654,6 +2654,151 @@ body{
   flex: none;
 }
 
+/* ---------- 自绘下拉：替掉原生 select（系统弹层是白底，暗色主题下很突兀） ---------- */
+.cb-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.dd {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+}
+
+.dd-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 230px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(9, 15, 27, 0.92);
+  color: var(--text);
+  font-size: 11.5px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dd-trigger:hover:not(:disabled) {
+  border-color: rgba(91, 140, 255, 0.45);
+  background: rgba(20, 33, 58, 0.95);
+}
+
+.dd-trigger.open {
+  border-color: rgba(91, 140, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, 0.14);
+}
+
+.dd-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dd-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-caret {
+  flex: none;
+  color: var(--muted);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.dd-trigger.open .dd-caret {
+  color: var(--accent);
+  transform: rotate(180deg);
+}
+
+.dd-panel {
+  position: fixed;
+  z-index: 1000;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(91, 140, 255, 0.25);
+  background: linear-gradient(180deg, #101b2f 0%, #0a1220 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+  animation: dd-in 0.12s ease-out;
+}
+
+@keyframes dd-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dd-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dd-option.active {
+  background: rgba(91, 140, 255, 0.14);
+}
+
+.dd-option.on {
+  background: rgba(91, 140, 255, 0.2);
+}
+
+.dd-option.on .dd-label {
+  color: #ffffff;
+}
+
+.dd-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dd-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-hint {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.dd-check {
+  flex: none;
+  color: var(--accent);
+  font-size: 11px;
+}
+
+.dd-empty {
+  padding: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .panel-foot-hint {
   font-size: 11px;
   color: var(--muted);

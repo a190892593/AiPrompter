@@ -5,6 +5,7 @@ import CallTrace from "../components/CallTrace";
 import AnswerColumns from "../components/AnswerColumns";
 import IntentStatsBar from "../components/IntentStats";
 import JudgeLogList from "../components/JudgeLogList";
+import Dropdown from "../components/Dropdown";
 
 function MonitorBar({ label, value }: { label: string; value: number }) {
   const width = Math.min(100, Math.round(value * 400));
@@ -1266,22 +1267,22 @@ export default function Teleprompter({
       <div className="control-bar">
         <div className="io-row">
           <LevelMeter label="面试官" value={bridge.levels.interviewer} active={bridge.active} />
-          <label>
+          <span className="cb-field">
             扬声器环回
-            <select
+            <Dropdown
               value={outputDevice}
-              onChange={(event) => void changeDevice("speaker", event.target.value)}
+              options={(bridge.devices?.outputs ?? []).map((item) => ({
+                value: item.name,
+                label: item.name,
+              }))}
+              onChange={(value) => void changeDevice("speaker", value)}
               disabled={switching}
               title={bridge.active ? "面试中也能切换，会短暂重启采集" : "选择扬声器环回设备"}
-            >
-              {(bridge.devices?.outputs ?? []).map((item) => (
-                <option key={item.id} value={item.name}>
-                  {item.name}
-                </option>
-              ))}
-              {(bridge.devices?.outputs ?? []).length === 0 && <option value="">没有可用输出设备</option>}
-            </select>
-          </label>
+              placeholder={
+                (bridge.devices?.outputs ?? []).length === 0 ? "没有可用输出设备" : "请选择扬声器环回"
+              }
+            />
+          </span>
 
           <button
             className={`btn ghost ${monitoring === "speaker" ? "active-test" : ""}`}
@@ -1295,22 +1296,20 @@ export default function Teleprompter({
 
         <div className="io-row">
           <LevelMeter label="候选人" value={bridge.levels.candidate} active={bridge.active} />
-          <label>
+          <span className="cb-field">
             麦克风
-            <select
+            <Dropdown
               value={inputDevice}
-              onChange={(event) => void changeDevice("mic", event.target.value)}
+              options={(bridge.devices?.inputs ?? []).map((item) => ({
+                value: item.name,
+                label: item.name,
+              }))}
+              onChange={(value) => void changeDevice("mic", value)}
               disabled={switching}
               title={bridge.active ? "面试中也能切换，会短暂重启采集" : "选择麦克风设备"}
-            >
-              {(bridge.devices?.inputs ?? []).map((item) => (
-                <option key={item.id} value={item.name}>
-                  {item.name}
-                </option>
-              ))}
-              {(bridge.devices?.inputs ?? []).length === 0 && <option value="">没有可用麦克风</option>}
-            </select>
-          </label>
+              placeholder={(bridge.devices?.inputs ?? []).length === 0 ? "没有可用麦克风" : "请选择麦克风"}
+            />
+          </span>
 
           <button
             className={`btn ghost ${monitoring === "mic" ? "active-test" : ""}`}
@@ -1322,25 +1321,26 @@ export default function Teleprompter({
           </button>
         </div>
 
-        <label>
+        <span className="cb-field">
           引擎
-          <select
+          <Dropdown
             value={engine}
-            onChange={(event) => void changeEngine(event.target.value)}
+            options={[
+              { value: "auto", label: "自动（优先本地）" },
+              ...Object.entries(enginesInfo)
+                .filter(([key, info]) => info.available && key !== "mock")
+                .map(([key, info]) => ({
+                  value: key,
+                  label: info.label,
+                  hint: key === "local" ? "免费" : "计费",
+                })),
+            ]}
+            onChange={(value) => void changeEngine(value)}
             disabled={switchingEngine}
             title="面试中也能切换；本地免费，云端按量计费"
-          >
-            <option value="auto">自动（优先本地）</option>
-            {Object.entries(enginesInfo)
-              .filter(([key, info]) => info.available && key !== "mock")
-              .map(([key, info]) => (
-                <option key={key} value={key}>
-                  {info.label}
-                  {key === "local" ? "（免费）" : "（计费）"}
-                </option>
-              ))}
-          </select>
-        </label>
+            minWidth={240}
+          />
+        </span>
 
         <label
           className={`sim-toggle ${simulated ? "on" : ""} ${!bridge.active ? "locked" : ""}`}
