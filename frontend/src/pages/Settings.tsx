@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Dropdown from "../components/Dropdown";
 
 interface Item {
   key: string;
@@ -100,13 +101,16 @@ export default function Settings() {
                     {item.overridden && <em className="overridden"> 已覆盖 .env</em>}
                   </span>
                   {item.kind === "bool" ? (
-                    <select
-                      value={values[item.key] ?? "1"}
-                      onChange={(event) => setValues({ ...values, [item.key]: event.target.value })}
-                    >
-                      <option value="1">开</option>
-                      <option value="0">关</option>
-                    </select>
+                    <Dropdown
+                      value={values[item.key] ?? ""}
+                      options={[
+                        { value: "1", label: "开" },
+                        { value: "0", label: "关" },
+                      ]}
+                      onChange={(value) => setValues({ ...values, [item.key]: value })}
+                      placeholder={`当前：${item.value}`}
+                      minWidth={120}
+                    />
                   ) : (
                     <input
                       type={item.secret ? "password" : "text"}

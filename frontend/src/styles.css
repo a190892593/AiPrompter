@@ -2799,6 +2799,58 @@ body{
   font-size: 12px;
 }
 
+/* 表单里的自绘下拉：撑满宽度、和输入框同高 */
+.field > .dd,
+.setup-grid .dd,
+.setup-resume .dd {
+  width: 100%;
+  color: var(--text);
+}
+
+.field .dd-trigger,
+.setup-grid .dd-trigger,
+.setup-resume .dd-trigger {
+  width: 100%;
+  max-width: none;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.bulk-bar .dd-trigger {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.log-filter-select .dd-trigger {
+  min-width: 160px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+[data-theme="light"] .dd-trigger {
+  background: #ffffff;
+  color: #16233a;
+}
+
+[data-theme="light"] .dd-panel {
+  background: #ffffff;
+  border-color: rgba(30, 60, 120, 0.18);
+  box-shadow: 0 18px 42px rgba(20, 40, 80, 0.22), 0 2px 8px rgba(20, 40, 80, 0.12);
+}
+
+[data-theme="light"] .dd-option {
+  color: #16233a;
+}
+
+[data-theme="light"] .dd-option.active,
+[data-theme="light"] .dd-option.on {
+  background: rgba(91, 140, 255, 0.14);
+}
+
 .panel-foot-hint {
   font-size: 11px;
   color: var(--muted);

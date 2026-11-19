@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Bridge, InterviewCreate, InterviewInfo } from "../bridge/useBridge";
 import { costLabel, engineLabel, modelsLabel, usageTitle } from "../usage";
+import Dropdown from "../components/Dropdown";
 
 interface Props {
   bridge: Bridge;
@@ -483,51 +484,61 @@ export default function InterviewList({ bridge, onOpen, onReplay }: Props) {
 
             <label className="field">
               <span>面试岗位 *</span>
-              <select value={positionId} onChange={(event) => setPositionId(event.target.value)}>
-                <option value="">请选择岗位…</option>
-                {positions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <Dropdown
+                value={positionId}
+                options={[
+                  { value: "", label: "请选择岗位…" },
+                  ...positions.map((item) => ({ value: String(item.id), label: item.name })),
+                ]}
+                onChange={(value) => setPositionId(value)}
+                placeholder="请选择岗位…"
+              />
             </label>
 
             <label className="field">
               <span>个人简历 *</span>
-              <select value={resumeId} onChange={(event) => void pickResume(event.target.value)}>
-                <option value="">请选择简历…</option>
-                {resumes.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <Dropdown
+                value={resumeId}
+                options={[
+                  { value: "", label: "请选择简历…" },
+                  ...resumes.map((item) => ({ value: String(item.id), label: item.name })),
+                ]}
+                onChange={(value) => void pickResume(value)}
+                placeholder="请选择简历…"
+              />
             </label>
 
             <div className="device-grid">
               <label className="field">
                 <span>扬声器环回（面试官的声音）*</span>
-                <select value={outputDevice} onChange={(event) => setOutputDevice(event.target.value)}>
-                  {(bridge.devices?.outputs ?? []).map((item) => (
-                    <option key={item.id} value={item.name}>
-                      {item.name}
-                    </option>
-                  ))}
-                  {(bridge.devices?.outputs ?? []).length === 0 && <option value="">没有可用环回设备</option>}
-                </select>
+                <Dropdown
+                  value={outputDevice}
+                  options={(bridge.devices?.outputs ?? []).map((item) => ({
+                    value: item.name,
+                    label: item.name,
+                  }))}
+                  onChange={(value) => setOutputDevice(value)}
+                  placeholder={
+                    (bridge.devices?.outputs ?? []).length === 0
+                      ? "没有可用环回设备"
+                      : "选择扬声器环回"
+                  }
+                />
               </label>
 
               <label className="field">
                 <span>麦克风（你的声音）*</span>
-                <select value={inputDevice} onChange={(event) => setInputDevice(event.target.value)}>
-                  {(bridge.devices?.inputs ?? []).map((item) => (
-                    <option key={item.id} value={item.name}>
-                      {item.name}
-                    </option>
-                  ))}
-                  {(bridge.devices?.inputs ?? []).length === 0 && <option value="">没有可用麦克风</option>}
-                </select>
+                <Dropdown
+                  value={inputDevice}
+                  options={(bridge.devices?.inputs ?? []).map((item) => ({
+                    value: item.name,
+                    label: item.name,
+                  }))}
+                  onChange={(value) => setInputDevice(value)}
+                  placeholder={
+                    (bridge.devices?.inputs ?? []).length === 0 ? "没有可用麦克风" : "选择麦克风"
+                  }
+                />
               </label>
             </div>
 

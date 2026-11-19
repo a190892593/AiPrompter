@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Dropdown from "../components/Dropdown";
 
 /** 分类标签按用途配色：意图识别蓝、答案绿、评分黄、简历紫、预热灰。 */
 function categoryTone(category: string): string {
@@ -233,18 +234,16 @@ export default function LLMLogs() {
         <button className="btn" onClick={applyFilter} disabled={loading}>
           筛选
         </button>
-        <select
+        <Dropdown
           className="log-filter-select"
           value={categoryFilter}
-          onChange={(event) => setCategoryFilter(event.target.value)}
-        >
-          <option value="">全部分类</option>
-          {CATEGORIES.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "全部分类" },
+            ...CATEGORIES.map((item) => ({ value: item, label: item })),
+          ]}
+          onChange={(value) => setCategoryFilter(value)}
+          minWidth={180}
+        />
         <label className="switch log-filter-switch">
           <input
             type="checkbox"

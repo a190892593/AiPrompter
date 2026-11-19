@@ -17,6 +17,8 @@ interface Props {
   placeholder?: string;
   /** 弹层最小宽度，默认 200 */
   minWidth?: number;
+  /** 追加到最外层容器的 class（用于贴合各页面的布局） */
+  className?: string;
 }
 
 /**
@@ -34,6 +36,7 @@ export default function Dropdown({
   title,
   placeholder = "请选择",
   minWidth = 200,
+  className = "",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -121,7 +124,7 @@ export default function Dropdown({
   };
 
   return (
-    <span className="dd">
+    <span className={`dd ${className}`.trim()}>
       <button
         type="button"
         ref={triggerRef}

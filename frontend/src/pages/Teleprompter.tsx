@@ -1120,45 +1120,46 @@ export default function Teleprompter({
           <div className="setup-grid">
             <label>
               面试岗位 <span className="req">*</span>
-              <select
+              <Dropdown
                 value={positionId}
-                onChange={(event) => void pickPosition(event.target.value)}
+                options={[
+                  { value: "", label: "请选择岗位…" },
+                  ...positions.map((item) => ({ value: String(item.id), label: item.name })),
+                ]}
+                onChange={(value) => void pickPosition(value)}
                 title="岗位在左侧菜单「岗位管理」里维护"
-              >
-                <option value="">请选择岗位…</option>
-                {positions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="请选择岗位…"
+              />
             </label>
 
             <label>
               面试级别
-              <select value={level} onChange={(event) => setLevel(event.target.value)}>
-                <option value="junior">初级</option>
-                <option value="mid">中级</option>
-                <option value="senior">高级</option>
-              </select>
+              <Dropdown
+                value={level}
+                options={[
+                  { value: "junior", label: "初级" },
+                  { value: "mid", label: "中级" },
+                  { value: "senior", label: "高级" },
+                ]}
+                onChange={(value) => setLevel(value)}
+                minWidth={140}
+              />
             </label>
 
           </div>
 
           <label className="setup-resume">
             个人简历 <span className="req">*</span>
-            <select
+            <Dropdown
               value={resumeId}
-              onChange={(event) => void pickResume(event.target.value)}
+              options={[
+                { value: "", label: "请选择简历…" },
+                ...resumes.map((item) => ({ value: String(item.id), label: item.name })),
+              ]}
+              onChange={(value) => void pickResume(value)}
               title="简历在左侧菜单「简历管理」里维护"
-            >
-              <option value="">请选择简历…</option>
-              {resumes.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
+              placeholder="请选择简历…"
+            />
             {resumeText.trim() ? (
               <pre className="resume-preview">{resumeText.trim().slice(0, 600)}</pre>
             ) : (
@@ -1360,15 +1361,17 @@ export default function Teleprompter({
         {simulated && (
           <label>
             提问
-            <select
+            <Dropdown
               value={simMode}
-              onChange={(event) => void changeSimMode(event.target.value as "bank" | "resume")}
+              options={[
+                { value: "bank", label: "题库随机" },
+                { value: "resume", label: "简历 + 追问" },
+              ]}
+              onChange={(value) => void changeSimMode(value as "bank" | "resume")}
               disabled={switchingSimMode}
               title="仿真提问来源：题库随机 / 简历 + 追问"
-            >
-              <option value="bank">题库随机</option>
-              <option value="resume">简历 + 追问</option>
-            </select>
+              minWidth={160}
+            />
           </label>
         )}
 
@@ -1528,19 +1531,18 @@ export default function Teleprompter({
           {selected.size > 0 && (
             <div className="bulk-bar">
               <span className="bulk-count">已选 {selected.size} 条</span>
-              <select
+              <Dropdown
                 className="bulk-select"
                 value={bankCategory || positionId}
-                onChange={(event) => setBankCategory(event.target.value)}
+                options={
+                  positions.length === 0
+                    ? [{ value: "", label: "（没有岗位，存到「提词器收藏」）" }]
+                    : positions.map((item) => ({ value: String(item.id), label: item.name }))
+                }
+                onChange={(value) => setBankCategory(value)}
                 title="存入哪个岗位的题库"
-              >
-                {positions.length === 0 && <option value="">（没有岗位，存到「提词器收藏」）</option>}
-                {positions.map((item) => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+                minWidth={200}
+              />
               <button className="btn primary" onClick={() => void saveSelected()} disabled={saving}>
                 {saving ? "保存中…" : "存入题库"}
               </button>
